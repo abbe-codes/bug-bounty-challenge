@@ -34,13 +34,18 @@ const AppHeader = React.forwardRef((props: AppHeaderProps, ref) => {
   const { t } = useTranslation('app');
   const theme = useTheme();
 
-  const [count, setCount] = useState(0);
-  const hours = 1;
-  const minutes = hours * 60;
-  const seconds = minutes * 60;
-  const countdown = seconds - count;
-  const countdownMinutes = `${~~(countdown / 60)}`.padStart(2, '0');
-  const countdownSeconds = (countdown % 60).toFixed(0).padStart(2, '0');
+  // more efficient way of this countdown that directly uses Date.now()
+  // Instead of counting seconds manually, store the start time
+  // and always calculate the remaining time based on the real clock (Date.now())
+  const [now, setNow] = useState(Date.now());
+  const targetDuration = 1 * 60 * 60 * 1000; // 1 hour in milliseconds
+  const startTime = React.useRef(Date.now()); // we use ref to persist across renders
+  const remaining = Math.max(0, targetDuration - (now - startTime.current));
+  const countdownMinutes = `${Math.floor(remaining / 60000)}`.padStart(2, '0');
+  const countdownSeconds = `${Math.floor((remaining % 60000) / 1000)}`.padStart(
+    2,
+    '0'
+  );
 
   // The countdown glitch comes from useEffect. We call setInterval, but never clear it
   // Every time React hot reloads, or the component re-mounts,
@@ -48,7 +53,7 @@ const AppHeader = React.forwardRef((props: AppHeaderProps, ref) => {
   // Solution: clean it up when the component unmounts
   useEffect(() => {
     const interval = setInterval(() => {
-      setCount((c) => c + 1);
+      setNow(Date.now());
     }, 1000);
 
     return () => clearInterval(interval);
