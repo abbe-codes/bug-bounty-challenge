@@ -42,10 +42,16 @@ const AppHeader = React.forwardRef((props: AppHeaderProps, ref) => {
   const countdownMinutes = `${~~(countdown / 60)}`.padStart(2, '0');
   const countdownSeconds = (countdown % 60).toFixed(0).padStart(2, '0');
 
+  // The countdown glitch comes from useEffect. We call setInterval, but never clear it
+  // Every time React hot reloads, or the component re-mounts,
+  // another setInterval starts, and the previous one is not cleaned up
+  // Solution: clean it up when the component unmounts
   useEffect(() => {
-    setInterval(() => {
+    const interval = setInterval(() => {
       setCount((c) => c + 1);
     }, 1000);
+
+    return () => clearInterval(interval);
   }, []);
 
   return (
