@@ -1,10 +1,10 @@
-import { Grow, Box, Theme, Toolbar, Typography } from "@mui/material";
-import MuiAppBar, { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
-import { styled, useTheme } from "@mui/material/styles";
-import React, { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { User } from "../../api/services/User/store";
-import AvatarMenu from "../AvatarMenu";
+import { Grow, Box, Theme, Toolbar, Typography } from '@mui/material';
+import MuiAppBar, { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar';
+import { styled, useTheme } from '@mui/material/styles';
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { User } from '../../api/services/User/store';
+import AvatarMenu from '../AvatarMenu';
 
 interface AppBarProps extends MuiAppBarProps {
   theme?: Theme;
@@ -16,22 +16,22 @@ interface AppHeaderProps {
 }
 
 const typoStyle = {
-  display: "flex",
-  alignContent: "center",
-  justifyContent: "center",
-  lineHeight: 1
+  display: 'flex',
+  alignContent: 'center',
+  justifyContent: 'center',
+  lineHeight: 1,
 };
 
 const AppBar = styled(MuiAppBar)<AppBarProps>(({ theme }) => ({
   zIndex: theme.zIndex.drawer + 1,
   backgroundColor: theme.palette.common.black,
   color: theme.palette.common.white,
-  height: theme.tokens.header.height
+  height: theme.tokens.header.height,
 }));
 
 const AppHeader = React.forwardRef((props: AppHeaderProps, ref) => {
   const { user, pageTitle } = props;
-  const { t } = useTranslation("app");
+  const { t } = useTranslation('app');
   const theme = useTheme();
 
   const [count, setCount] = useState(0);
@@ -39,8 +39,8 @@ const AppHeader = React.forwardRef((props: AppHeaderProps, ref) => {
   const minutes = hours * 60;
   const seconds = minutes * 60;
   const countdown = seconds - count;
-  const countdownMinutes = `${~~(countdown / 60)}`.padStart(2, "0");
-  const countdownSeconds = (countdown % 60).toFixed(0).padStart(2, "0");
+  const countdownMinutes = `${~~(countdown / 60)}`.padStart(2, '0');
+  const countdownSeconds = (countdown % 60).toFixed(0).padStart(2, '0');
 
   useEffect(() => {
     setInterval(() => {
@@ -49,11 +49,11 @@ const AppHeader = React.forwardRef((props: AppHeaderProps, ref) => {
   }, []);
 
   return (
-    <AppBar ref={ref} position="fixed" sx={{ width: "100vw" }}>
-      <Toolbar sx={{ background: "#08140C 0% 0% no-repeat padding-box" }}>
-        <Box sx={{ width: "100%", flexDirection: "row", display: "flex" }}>
+    <AppBar ref={ref} position='fixed' sx={{ width: '100vw' }}>
+      <Toolbar sx={{ background: '#08140C 0% 0% no-repeat padding-box' }}>
+        <Box sx={{ width: '100%', flexDirection: 'row', display: 'flex' }}>
           <Box>
-            <Typography variant="h6" component="div" color="primary">
+            <Typography variant='h6' component='div' color='primary'>
               {countdownMinutes}:{countdownSeconds}
             </Typography>
           </Box>
@@ -63,26 +63,35 @@ const AppHeader = React.forwardRef((props: AppHeaderProps, ref) => {
               sx={{
                 ...typoStyle,
                 color: theme.palette.primary.main,
-                mb: theme.spacing(0.5)
+                mb: theme.spacing(0.5),
               }}
-              variant="h6"
-              component="div"
+              variant='h6'
+              component='div'
             >
-              {t("appTitle").toLocaleUpperCase()}
+              {t('appTitle').toLocaleUpperCase()}
             </Typography>
             <Typography
               sx={{ ...typoStyle }}
-              variant="overline"
-              component="div"
+              variant='overline'
+              component='div'
               noWrap
             >
               {pageTitle.toLocaleUpperCase()}
             </Typography>
           </Box>
-          <Box sx={{ flex: 1, justifyContent: "flex-end", display: "flex" }}>
+          <Box sx={{ flex: 1, justifyContent: 'flex-end', display: 'flex' }}>
             {user && user.eMail && (
+              // Here we conditionally rendering components based on user
+              // but Grow still tries to animate even when user wasn't ready yet !!!
+              // even though we check user && user.eMail, <Grow> still tries to render the child during mount
+              // <Grow> needs a DOM node inside immediately,
+              // solution: we wrap AvatarMenu inside a plain <div>
+              // Why? <Grow> expects the first child to be a real DOM element (<div>), not a React component
+              // Now <Grow> always animates a simple <div>, which exists immediately
               <Grow in={Boolean(user && user.eMail)}>
-                <AvatarMenu user={user} />
+                <div>
+                  <AvatarMenu user={user} />
+                </div>
               </Grow>
             )}
           </Box>
