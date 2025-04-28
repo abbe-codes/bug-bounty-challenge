@@ -39,8 +39,8 @@ const AppHeader = React.forwardRef((props: AppHeaderProps, ref) => {
   // Instead of counting seconds manually, store the start time
   // and always calculate the remaining time based on the real clock (Date.now())
   const [now, setNow] = useState(Date.now());
-  const targetDuration = 1 * 60 * 60 * 1000; // 1 hour in milliseconds
-  const startTime = React.useRef(Date.now()); // we use ref to persist across renders
+  const startTime = React.useRef(Date.now());
+  const targetDuration = 1 * 60 * 60 * 1000;
   const remaining = Math.max(0, targetDuration - (now - startTime.current));
   const countdownMinutes = `${Math.floor(remaining / 60000)}`.padStart(2, '0');
   const countdownSeconds = `${Math.floor((remaining % 60000) / 1000)}`.padStart(
@@ -52,9 +52,18 @@ const AppHeader = React.forwardRef((props: AppHeaderProps, ref) => {
   // Every time React hot reloads, or the component re-mounts,
   // another setInterval starts, and the previous one is not cleaned up
   // Solution: clean it up when the component unmounts
+  // Update: make countdown stop at 0.00
   useEffect(() => {
     const interval = setInterval(() => {
-      setNow(Date.now());
+      const currentTime = Date.now();
+      const elapsed = currentTime - startTime.current;
+
+      if (elapsed >= targetDuration) {
+        setNow(startTime.current + targetDuration);
+        clearInterval(interval);
+      } else {
+        setNow(currentTime);
+      }
     }, 1000);
 
     return () => clearInterval(interval);
